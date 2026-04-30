@@ -17,8 +17,7 @@ class FarmerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(_farmerProfileProvider(farmerId));
-    final roleAsync = ref.watch(userRoleProvider);
-    final role = roleAsync.value;
+    final role = ref.watch(userRoleProvider); // CHANGED — direct String now
     final theme = Theme.of(context);
 
     return Scaffold(

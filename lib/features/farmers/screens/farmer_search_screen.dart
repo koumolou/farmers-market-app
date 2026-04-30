@@ -34,8 +34,7 @@ class _FarmerSearchScreenState extends ConsumerState<FarmerSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final searchState = ref.watch(farmerSearchProvider);
-    final roleAsync = ref.watch(userRoleProvider);
-    final role = roleAsync.value;
+    final role = ref.watch(userRoleProvider); // CHANGED — direct String now
     final theme = Theme.of(context);
 
     ref.listen(farmerSearchProvider, (_, next) {
@@ -138,8 +137,7 @@ class _FarmerResultCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final roleAsync = ref.watch(userRoleProvider);
-    final role = roleAsync.value;
+    final role = ref.watch(userRoleProvider); // CHANGED — direct String now
 
     return Card(
       elevation: 0,

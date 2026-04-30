@@ -6,6 +6,7 @@ import '../models/cart_model.dart';
 import '../../farmers/providers/farmer_provider.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../shared/widgets/error_snackbar.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -53,16 +54,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         context.go('/farmers/${farmer.id}');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      if (mounted) AppSnackbar.error(context, e);
     } finally {
       if (mounted) setState(() => _loading = false);
+      AppSnackbar.success(context, 'Order placed successfully!');
     }
   }
 

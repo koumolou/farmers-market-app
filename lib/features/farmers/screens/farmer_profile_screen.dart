@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../debts/models/debt_model.dart'; // ADD THIS
+import '../data/farmer_repository.dart';
 import '../providers/farmer_provider.dart';
+import '../../debts/models/debt_model.dart';
+import '../../../core/providers/role_provider.dart';
 
 final _farmerProfileProvider = FutureProvider.family<Map<String, dynamic>, int>(
   (ref, farmerId) => ref.read(farmerRepositoryProvider).getProfile(farmerId),
@@ -15,6 +17,8 @@ class FarmerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(_farmerProfileProvider(farmerId));
+    final roleAsync = ref.watch(userRoleProvider);
+    final role = roleAsync.value;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -34,47 +38,51 @@ class FarmerProfileScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header card
                 _ProfileHeader(farmer: farmer, outstanding: outstanding),
                 const SizedBox(height: 20),
 
-                // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => context.push('/categories'),
-                        icon: const Icon(Icons.add_shopping_cart_rounded),
-                        label: const Text('New Order'),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                // Action buttons — only for operators
+                if (role.isOperator)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            ref.read(selectedFarmerProvider.notifier).state =
+                                null;
+                            context.push('/categories');
+                          },
+                          icon: const Icon(Icons.add_shopping_cart_rounded),
+                          label: const Text('New Order'),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: outstanding > 0
-                            ? () => context.push('/repayment/$farmerId')
-                            : null,
-                        icon: const Icon(Icons.payments_outlined),
-                        label: const Text('Repayment'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: outstanding > 0
+                              ? () => context.push('/repayment/$farmerId')
+                              : null,
+                          icon: const Icon(Icons.payments_outlined),
+                          label: const Text('Repayment'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+
                 const SizedBox(height: 28),
 
-                // Debts section
                 Text(
                   'Outstanding Debts',
                   style: theme.textTheme.titleMedium?.copyWith(

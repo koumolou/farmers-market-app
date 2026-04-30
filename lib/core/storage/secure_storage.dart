@@ -38,4 +38,14 @@ class SecureStorage {
   static Future<void> clearAll() async {
     await _storage.deleteAll();
   }
+
+  static const _roleKey = 'auth_role';
+
+  static Future<void> saveRole(String role) async {
+    await _storage.write(key: _roleKey, value: role);
+  }
+
+  static Future<String?> getRole() async {
+    return await _storage.read(key: _roleKey);
+  }
 }

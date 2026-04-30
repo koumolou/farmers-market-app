@@ -14,6 +14,7 @@ class AuthRepository {
     final data = response.data['data'];
     await SecureStorage.saveToken(data['token']);
     await SecureStorage.saveUser(jsonEncode(data['user']));
+    await SecureStorage.saveRole(data['user']['role']);
     return data;
   }
 

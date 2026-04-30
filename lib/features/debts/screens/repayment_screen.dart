@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/debt_repository.dart';
+import '../../../shared/widgets/error_snackbar.dart';
 
 class RepaymentScreen extends ConsumerStatefulWidget {
   final int farmerId;
@@ -44,16 +45,10 @@ class _RepaymentScreenState extends ConsumerState<RepaymentScreen> {
         context.pop();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      if (mounted) AppSnackbar.error(context, e);
     } finally {
       if (mounted) setState(() => _loading = false);
+      AppSnackbar.success(context, 'Repayment recorded successfully');
     }
   }
 

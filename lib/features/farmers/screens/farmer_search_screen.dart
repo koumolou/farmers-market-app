@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../providers/farmer_provider.dart';
 import '../models/farmer_model.dart';
 import '../data/farmer_repository.dart';
-import '../../auth/providers/auth_provider.dart'; // fixes authProvider error
+import '../../auth/providers/auth_provider.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/providers/role_provider.dart';
+import '../../../shared/widgets/error_snackbar.dart';
 
 class FarmerSearchScreen extends ConsumerStatefulWidget {
   const FarmerSearchScreen({super.key});
@@ -31,16 +34,13 @@ class _FarmerSearchScreenState extends ConsumerState<FarmerSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final searchState = ref.watch(farmerSearchProvider);
+    final roleAsync = ref.watch(userRoleProvider);
+    final role = roleAsync.value;
     final theme = Theme.of(context);
 
     ref.listen(farmerSearchProvider, (_, next) {
       if (next is AsyncError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error.toString()),
-            backgroundColor: theme.colorScheme.error,
-          ),
-        );
+        AppSnackbar.error(context, next.error!);
       }
     });
 
@@ -52,22 +52,24 @@ class _FarmerSearchScreenState extends ConsumerState<FarmerSearchScreen> {
             icon: const Icon(Icons.logout_rounded),
             onPressed: () async {
               await ref.read(authProvider.notifier).logout();
+              authStateNotifier.setLoggedIn(false);
               if (context.mounted) context.go('/login');
             },
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateFarmerSheet(context),
-        icon: const Icon(Icons.person_add_rounded),
-        label: const Text('New Farmer'),
-      ),
+      floatingActionButton: role.isOperator
+          ? FloatingActionButton.extended(
+              onPressed: () => _showCreateFarmerSheet(context),
+              icon: const Icon(Icons.person_add_rounded),
+              label: const Text('New Farmer'),
+            )
+          : null,
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Search bar
             Row(
               children: [
                 Expanded(
@@ -129,7 +131,6 @@ class _FarmerSearchScreenState extends ConsumerState<FarmerSearchScreen> {
   }
 }
 
-// ✅ Changed from StatelessWidget to ConsumerWidget
 class _FarmerResultCard extends ConsumerWidget {
   final FarmerModel farmer;
   const _FarmerResultCard({required this.farmer});
@@ -137,6 +138,9 @@ class _FarmerResultCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final roleAsync = ref.watch(userRoleProvider);
+    final role = roleAsync.value;
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -207,24 +211,26 @@ class _FarmerResultCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      // ✅ Set farmer in state before navigating to checkout
-                      ref.read(selectedFarmerProvider.notifier).state = farmer;
-                      context.push('/categories');
-                    },
-                    icon: const Icon(Icons.shopping_cart_outlined),
-                    label: const Text('New Order'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                if (role.isOperator) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        ref.read(selectedFarmerProvider.notifier).state =
+                            farmer;
+                        context.push('/categories');
+                      },
+                      icon: const Icon(Icons.shopping_cart_outlined),
+                      label: const Text('New Order'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ],
@@ -321,19 +327,10 @@ class _CreateFarmerSheetState extends ConsumerState<_CreateFarmerSheet> {
       });
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Farmer created successfully')),
-        );
+        AppSnackbar.success(context, 'Farmer created successfully');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      if (mounted) AppSnackbar.error(context, e);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

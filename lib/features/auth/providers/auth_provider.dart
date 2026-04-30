@@ -1,11 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/auth_repository.dart';
+import '../../../core/errors/app_exception.dart';
 import '../../../core/router/app_router.dart';
 
 final authRepositoryProvider = Provider((ref) => AuthRepository());
 
-class AuthNotifierProvider extends StateNotifier<AsyncValue<void>> {
-  AuthNotifierProvider(this._repo) : super(const AsyncData(null));
+class AuthNotifier extends StateNotifier<AsyncValue<void>> {
+  AuthNotifier(this._repo) : super(const AsyncData(null));
 
   final AuthRepository _repo;
 
@@ -16,8 +18,14 @@ class AuthNotifierProvider extends StateNotifier<AsyncValue<void>> {
       authStateNotifier.setLoggedIn(true);
       state = const AsyncData(null);
       return true;
+    } on DioException catch (e) {
+      final appError = e.error is AppException
+          ? e.error as AppException
+          : AppException(e.message ?? 'Login failed');
+      state = AsyncError(appError, StackTrace.current);
+      return false;
     } catch (e) {
-      state = AsyncError(e, StackTrace.current);
+      state = AsyncError(AppException(e.toString()), StackTrace.current);
       return false;
     }
   }
@@ -28,7 +36,6 @@ class AuthNotifierProvider extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final authProvider =
-    StateNotifierProvider<AuthNotifierProvider, AsyncValue<void>>(
-      (ref) => AuthNotifierProvider(ref.read(authRepositoryProvider)),
-    );
+final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<void>>(
+  (ref) => AuthNotifier(ref.read(authRepositoryProvider)),
+);

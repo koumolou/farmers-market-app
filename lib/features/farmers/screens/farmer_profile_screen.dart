@@ -6,7 +6,7 @@ import '../providers/farmer_provider.dart';
 import '../../debts/models/debt_model.dart';
 import '../../../core/providers/role_provider.dart';
 
-final _farmerProfileProvider = FutureProvider.family<Map<String, dynamic>, int>(
+final farmerProfileProvider = FutureProvider.family<Map<String, dynamic>, int>(
   (ref, farmerId) => ref.read(farmerRepositoryProvider).getProfile(farmerId),
 );
 
@@ -16,7 +16,7 @@ class FarmerProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(_farmerProfileProvider(farmerId));
+    final profileAsync = ref.watch(farmerProfileProvider(farmerId));
     final role = ref.watch(userRoleProvider); // CHANGED — direct String now
     final theme = Theme.of(context);
 

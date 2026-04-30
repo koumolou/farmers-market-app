@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/constants/api_constants.dart';
 import '../models/debt_model.dart';
@@ -22,3 +23,5 @@ class DebtRepository {
     return response.data['data'];
   }
 }
+
+final debtRepositoryProvider = Provider((ref) => DebtRepository());

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/debt_repository.dart';
+import '../screens/debt_list_screen.dart';
+import '../../farmers/screens/farmer_profile_screen.dart';
 import '../../../shared/widgets/error_snackbar.dart';
 
 class RepaymentScreen extends ConsumerStatefulWidget {
@@ -34,21 +36,22 @@ class _RepaymentScreenState extends ConsumerState<RepaymentScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await DebtRepository().recordRepayment(
-        widget.farmerId,
-        double.parse(_kgCtrl.text),
-      );
+      await ref
+          .read(debtRepositoryProvider)
+          .recordRepayment(widget.farmerId, double.parse(_kgCtrl.text));
+
+      // Invalidate so both screens refresh instantly on pop
+      ref.invalidate(debtsProvider(widget.farmerId));
+      ref.invalidate(farmerProfileProvider(widget.farmerId));
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Repayment recorded successfully')),
-        );
+        AppSnackbar.success(context, 'Repayment recorded successfully');
         context.pop();
       }
     } catch (e) {
       if (mounted) AppSnackbar.error(context, e);
     } finally {
       if (mounted) setState(() => _loading = false);
-      AppSnackbar.success(context, 'Repayment recorded successfully');
     }
   }
 

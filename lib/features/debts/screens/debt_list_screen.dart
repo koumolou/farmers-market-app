@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../data/debt_repository.dart';
 import '../models/debt_model.dart';
 
-final _debtsProvider = FutureProvider.family<List<DebtModel>, int>(
-  (ref, farmerId) => DebtRepository().getFarmerDebts(farmerId),
+final debtsProvider = FutureProvider.family<List<DebtModel>, int>(
+  (ref, farmerId) => ref.read(debtRepositoryProvider).getFarmerDebts(farmerId),
 );
 
 class DebtListScreen extends ConsumerWidget {
@@ -14,7 +14,7 @@ class DebtListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final debtsAsync = ref.watch(_debtsProvider(farmerId));
+    final debtsAsync = ref.watch(debtsProvider(farmerId)); // CHANGED
     final theme = Theme.of(context);
 
     return Scaffold(

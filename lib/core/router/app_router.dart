@@ -8,9 +8,43 @@ import '../../features/products/screens/product_list_screen.dart';
 import '../../features/checkout/screens/checkout_screen.dart';
 import '../../features/debts/screens/debt_list_screen.dart';
 import '../../features/debts/screens/repayment_screen.dart';
+import '../storage/secure_storage.dart';
+
+final authStateNotifier = AuthNotifier();
+
+class AuthNotifier extends ChangeNotifier {
+  bool _isLoggedIn = false;
+  bool _initialized = false;
+
+  bool get isLoggedIn => _isLoggedIn;
+  bool get initialized => _initialized;
+
+  Future<void> initialize() async {
+    final token = await SecureStorage.getToken();
+    _isLoggedIn = token != null;
+    _initialized = true;
+    notifyListeners();
+  }
+
+  void setLoggedIn(bool value) {
+    _isLoggedIn = value;
+    notifyListeners();
+  }
+}
 
 final appRouter = GoRouter(
   initialLocation: '/login',
+  refreshListenable: authStateNotifier,
+  redirect: (context, state) {
+    if (!authStateNotifier.initialized) return '/login';
+
+    final onLogin = state.matchedLocation == '/login';
+
+    if (!authStateNotifier.isLoggedIn && !onLogin) return '/login';
+    if (authStateNotifier.isLoggedIn && onLogin) return '/farmers';
+
+    return null;
+  },
   routes: [
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/farmers', builder: (_, __) => const FarmerSearchScreen()),

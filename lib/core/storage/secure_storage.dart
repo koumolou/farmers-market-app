@@ -1,7 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
-  static const _storage = FlutterSecureStorage();
+  static FlutterSecureStorage get _storage {
+    if (kIsWeb) {
+      // Web uses localStorage under the hood
+      return const FlutterSecureStorage(
+        webOptions: WebOptions(dbName: 'farmarket', publicKey: 'farmarket_key'),
+      );
+    }
+    return const FlutterSecureStorage();
+  }
+
   static const _tokenKey = 'auth_token';
   static const _userKey = 'auth_user';
 

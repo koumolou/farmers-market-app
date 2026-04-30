@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 import '../constants/api_constants.dart';
 import '../errors/app_exception.dart';
 import '../storage/secure_storage.dart';
@@ -17,11 +19,14 @@ class DioClient {
         baseUrl: ApiConstants.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
-        headers: {'Accept': 'application/json'},
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
       ),
     );
 
-    // Auth interceptor — attaches token to every request
+    // Auth interceptor
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -29,9 +34,26 @@ class DioClient {
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+          // Debug — remove after testing
+          if (kDebugMode) {
+            print('REQUEST: ${options.method} ${options.uri}');
+            print('HEADERS: ${options.headers}');
+            if (options.data != null) print('BODY: ${options.data}');
+          }
           handler.next(options);
         },
+        onResponse: (response, handler) {
+          if (kDebugMode) {
+            print('RESPONSE ${response.statusCode}: ${response.data}');
+          }
+          handler.next(response);
+        },
         onError: (error, handler) {
+          if (kDebugMode) {
+            print('ERROR: ${error.response?.statusCode} ${error.message}');
+            print('ERROR DATA: ${error.response?.data}');
+          }
+
           final response = error.response;
           String message = 'Something went wrong';
 
@@ -40,7 +62,6 @@ class DioClient {
             if (data is Map && data['message'] != null) {
               message = data['message'];
             }
-            // Collect validation errors if present
             if (data is Map && data['errors'] != null) {
               final errors = data['errors'] as Map;
               message = errors.values
@@ -48,7 +69,7 @@ class DioClient {
                   .join('\n');
             }
           } else {
-            message = 'No internet connection';
+            message = 'No internet connection or server unreachable';
           }
 
           handler.reject(

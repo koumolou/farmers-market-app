@@ -8,6 +8,8 @@ import '../../auth/providers/auth_provider.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/providers/role_provider.dart';
 import '../../../shared/widgets/error_snackbar.dart';
+import '../../../features/checkout/providers/cart_provider.dart';
+import '../../../core/utils/responsive.dart';
 
 class FarmerSearchScreen extends ConsumerStatefulWidget {
   const FarmerSearchScreen({super.key});
@@ -65,7 +67,7 @@ class _FarmerSearchScreenState extends ConsumerState<FarmerSearchScreen> {
             )
           : null,
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(Responsive.cardPadding(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -146,7 +148,7 @@ class _FarmerResultCard extends ConsumerWidget {
         side: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(Responsive.cardPadding(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

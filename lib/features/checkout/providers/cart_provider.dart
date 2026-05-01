@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/cart_model.dart';
 import '../../products/models/product_model.dart';
+import '../../farmers/models/farmer_model.dart';
 
 class CartNotifier extends StateNotifier<List<CartItem>> {
   CartNotifier() : super([]);
@@ -41,3 +42,7 @@ final cartProvider = StateNotifierProvider<CartNotifier, List<CartItem>>(
 );
 
 final paymentMethodProvider = StateProvider<String>((ref) => 'cash');
+
+// MOVED HERE — selectedFarmerProvider lives in cart_provider so it persists
+// through the full navigation stack: search → categories → products → checkout
+final selectedFarmerProvider = StateProvider<FarmerModel?>((ref) => null);

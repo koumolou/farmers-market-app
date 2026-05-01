@@ -1,12 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_model.dart';
-import '../../farmers/providers/farmer_provider.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../shared/widgets/error_snackbar.dart';
+import '../../farmers/screens/farmer_profile_screen.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -21,16 +22,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   Future<void> _placeOrder() async {
     final farmer = ref.read(selectedFarmerProvider);
-    if (farmer == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a farmer first')),
-      );
-      context.go('/farmers');
-      return;
-    }
-
     final cartItems = ref.read(cartProvider);
     final paymentMethod = ref.read(paymentMethodProvider);
+
+    if (farmer == null) {
+      AppSnackbar.error(
+        context,
+        'No farmer selected. Please go back and search for a farmer first.',
+      );
+      return;
+    }
 
     setState(() => _loading = true);
     try {
@@ -46,18 +47,40 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       );
 
       ref.read(cartProvider.notifier).clear();
+      ref.read(paymentMethodProvider.notifier).state = 'cash';
+      ref.invalidate(farmerProfileProvider(farmer.id));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order placed successfully!')),
-        );
-        context.go('/farmers/${farmer.id}');
+        context.push('/farmers/${farmer.id}');
+
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            AppSnackbar.success(context, 'Order placed successfully!');
+          }
+        });
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        final data = e.response?.data;
+        String message = 'Order failed. Please try again.';
+
+        if (data is Map) {
+          if (data['errors'] != null && data['errors'] is Map) {
+            final errors = data['errors'] as Map;
+            message = errors.values
+                .expand((v) => v is List ? v.cast<String>() : [v.toString()])
+                .join('\n');
+          } else if (data['message'] != null) {
+            message = data['message'].toString();
+          }
+        }
+
+        AppSnackbar.error(context, message);
       }
     } catch (e) {
       if (mounted) AppSnackbar.error(context, e);
     } finally {
       if (mounted) setState(() => _loading = false);
-      AppSnackbar.success(context, 'Order placed successfully!');
     }
   }
 
@@ -75,13 +98,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final grandTotal = subtotal + interestAmt;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Farmer info
+            // Farmer info card
             if (farmer != null)
               Container(
                 padding: const EdgeInsets.all(14),
@@ -134,7 +163,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ...cartItems.map((item) => _OrderItemRow(item: item)),
             const Divider(height: 28),
 
-            // Payment method selector
+            // Payment method
             Text(
               'Payment method',
               style: theme.textTheme.titleMedium?.copyWith(

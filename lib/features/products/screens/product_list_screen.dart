@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/product_provider.dart';
 import '../models/product_model.dart';
 import '../../checkout/providers/cart_provider.dart';
+import '../../../core/utils/responsive.dart';
 
 class ProductListScreen extends ConsumerWidget {
   final int? categoryId;
@@ -11,7 +12,6 @@ class ProductListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Set category filter
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final current = ref.read(selectedCategoryProvider);
       if (categoryId != null && current?.id != categoryId) {
@@ -28,6 +28,11 @@ class ProductListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Products'),
+
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => context.pop(),
+        ),
         actions: [
           Stack(
             children: [
@@ -68,8 +73,8 @@ class ProductListScreen extends ConsumerWidget {
             ? const Center(child: Text('No products in this category'))
             : GridView.builder(
                 padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: Responsive.productGridColumns(context),
                   childAspectRatio: 0.85,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,

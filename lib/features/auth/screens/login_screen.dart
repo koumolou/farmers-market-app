@@ -57,37 +57,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo
-                  Container(
-                    width: 72,
-                    height: 72,
-                    margin: const EdgeInsets.only(bottom: 24),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.agriculture_rounded,
-                      color: Colors.white,
-                      size: 40,
+                  const SizedBox(height: 40),
+
+                  // Logo icon
+                  Center(
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: const Icon(
+                        Icons.agriculture_rounded,
+                        color: Colors.white,
+                        size: 52,
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 20),
 
-                  Text(
-                    'Farmers Market',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurface,
+                  Center(
+                    child: Text(
+                      'Farmers Market',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 32,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    'POS Operator Portal',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+
+                  // Subtitle
+                  Center(
+                    child: Text(
+                      'POS Operator Portal',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 48),
 
                   // Email
                   TextFormField(
@@ -156,6 +167,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                   ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),

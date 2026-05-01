@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/farmer_repository.dart';
-import '../providers/farmer_provider.dart';
+import '../models/farmer_model.dart';
 import '../../debts/models/debt_model.dart';
+import '../../checkout/providers/cart_provider.dart';
 import '../../../core/providers/role_provider.dart';
+import '../../../core/utils/responsive.dart';
 
 final farmerProfileProvider = FutureProvider.family<Map<String, dynamic>, int>(
   (ref, farmerId) => ref.read(farmerRepositoryProvider).getProfile(farmerId),
@@ -17,11 +19,19 @@ class FarmerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(farmerProfileProvider(farmerId));
-    final role = ref.watch(userRoleProvider); // CHANGED — direct String now
+    final role = ref.watch(userRoleProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Farmer Profile')),
+      appBar: AppBar(
+        title: const Text('Farmer Profile'),
+        leading: context.canPop()
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: () => context.pop(),
+              )
+            : null,
+      ),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),
@@ -33,22 +43,31 @@ class FarmerProfileScreen extends ConsumerWidget {
               .toList();
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(Responsive.cardPadding(context)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _ProfileHeader(farmer: farmer, outstanding: outstanding),
                 const SizedBox(height: 20),
 
-                // Action buttons — only for operators
                 if (role.isOperator)
                   Row(
                     children: [
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () {
-                            ref.read(selectedFarmerProvider.notifier).state =
-                                null;
+                            ref
+                                .read(selectedFarmerProvider.notifier)
+                                .state = FarmerModel(
+                              id: farmer['id'],
+                              identifier: farmer['identifier'],
+                              firstname: farmer['firstname'],
+                              lastname: farmer['lastname'],
+                              phone: farmer['phone'],
+                              creditLimit: double.parse(
+                                farmer['credit_limit'].toString(),
+                              ),
+                            );
                             context.push('/categories');
                           },
                           icon: const Icon(Icons.add_shopping_cart_rounded),

@@ -129,3 +129,9 @@ cd ../..
 ```
 
 ---
+
+## AI Usage Report
+
+See `AI_USAGE_REPORT.md` in the backend repository for a full write-up on how Claude
+Code was used throughout development, where it helped most, and where human intervention
+was required.
